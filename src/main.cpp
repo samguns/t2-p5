@@ -92,6 +92,38 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
+
+          /**
+           * According to Section 7 of Lesson 19:
+           * One approach (to address actuator latency) would be
+           * running a simulation using the vehicle model starting
+           * from the current state for the duration of the latency.
+           * The resulting state from the simulation is the new
+           * initial state for MPC.
+           *
+           * So, given current px, py, psi, v, steer and throttle
+           * the vehicle feeds back to us, we apply the kinematic
+           * model to compute the new initial state for MPC after
+           * 100ms latency.
+           * The vehicle uses MPH metric, we have to convert it
+           * to Meters Per Second to comply Unity metric (1 meter/unit).
+           * 1 Mile per Hour = 0.44704 Meter per second
+           */
+          v *= 0.44704;
+          double Lf = 2.67;
+          double dt = 0.1;
+          px += v * cos(psi) * dt;
+          py += v * sin(psi) * dt;
+          /**
+           * In the simulator, a positive psi value implies a right turn
+           * and a negative value implies a left turn. The workaround to address
+           * this problem is change the psi update equation to be:
+           * psi_[t+1] = psi[t] - v[t] / Lf * delta[t] * dt
+           */
+          psi -= v / Lf * steer_value * dt;
+          v += throttle_value * dt;
 
           for (size_t i = 0; i < ptsx.size(); i++) {
             /**
@@ -113,9 +145,6 @@ int main() {
           double cte = polyeval(coeffs, 0);
           //* epsi = psi - atan(f`(x)) = psi - atan(coeffs[1] + 2 * coeffs[2] * px + 3 * coeffs[3] * pow(px, 2))
           double epsi = -atan(coeffs[1]);
-
-          double steer_value;
-          double throttle_value;
 
           Eigen::VectorXd state(6);
           state << 0, 0, 0, v, cte, epsi;
@@ -163,7 +192,6 @@ int main() {
             */
             auto vars = mpc.Solve(state, coeffs);
 
-            double Lf = 2.67;
             steer_value = vars[0] / (deg2rad(25) * Lf);
             throttle_value = vars[1];
 
@@ -217,7 +245,7 @@ int main() {
             //
             // NOTE: REMEMBER TO SET THIS TO 100 MILLISECONDS BEFORE
             // SUBMITTING.
-            // this_thread::sleep_for(chrono::milliseconds(100));
+            this_thread::sleep_for(chrono::milliseconds(100));
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
           }
         }

@@ -22,8 +22,7 @@ static double dt = 0.1;
 const double Lf = 2.67;
 
 // Both the reference cross track and orientation errors are 0.
-// The reference velocity is set to 100 mph.
-static double ref_v = 50;
+static double ref_v = 50 * 0.44704;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -48,7 +47,7 @@ void SetParams(size_t step, double interval, double v, double cte_f, double epsi
                double steer_f, double a_f, double steer_diff_f, double a_diff_f) {
   N = step;
   dt = interval;
-  ref_v = v;
+  ref_v = v * 0.44704;
 
   y_start = x_start + N;
   psi_start = y_start + N;
