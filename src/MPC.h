@@ -17,4 +17,8 @@ class MPC {
   vector<double> Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs);
 };
 
+
+void SetParams(size_t step, double interval, double v, double cte_f, double epsi_f,
+               double steer_f, double a_f, double steer_diff_f, double a_diff_f);
+
 #endif /* MPC_H */

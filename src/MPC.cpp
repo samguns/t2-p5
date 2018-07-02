@@ -5,16 +5,9 @@
 
 using CppAD::AD;
 
-#define CTE_PENALTY_FACTOR                2000
-#define EPSI_PENALTY_FACTOR               2000
-#define STEERING_PENALTY_FACTOR           10
-#define ACCELARATION_PENALTY_FACTOR       5
-#define STEERING_DIFF_PENALTY_FACTOR      200
-#define ACCELARATION_DIFF_PENALTY_FACTOR  10
-
 // Set the timestep length and duration
-size_t N = 10;
-double dt = 0.1;
+static size_t N = 10;
+static double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -30,19 +23,48 @@ const double Lf = 2.67;
 
 // Both the reference cross track and orientation errors are 0.
 // The reference velocity is set to 100 mph.
-double ref_v = 50;
+static double ref_v = 50;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
 // when one variable starts and another ends to make our lifes easier.
-size_t x_start = 0;
-size_t y_start = x_start + N;
-size_t psi_start = y_start + N;
-size_t v_start = psi_start + N;
-size_t cte_start = v_start + N;
-size_t epsi_start = cte_start + N;
-size_t delta_start = epsi_start + N;
-size_t a_start = delta_start + N - 1;
+static size_t x_start = 0;
+static size_t y_start = x_start + N;
+static size_t psi_start = y_start + N;
+static size_t v_start = psi_start + N;
+static size_t cte_start = v_start + N;
+static size_t epsi_start = cte_start + N;
+static size_t delta_start = epsi_start + N;
+static size_t a_start = delta_start + N - 1;
+
+static double cte_factor = 2000;
+static double epsi_factor = 2000;
+static double steering_factor = 5;
+static double acce_factor = 5;
+static double steering_diff_factor = 200;
+static double acce_diff_factor = 10;
+
+void SetParams(size_t step, double interval, double v, double cte_f, double epsi_f,
+               double steer_f, double a_f, double steer_diff_f, double a_diff_f) {
+  N = step;
+  dt = interval;
+  ref_v = v;
+
+  y_start = x_start + N;
+  psi_start = y_start + N;
+  v_start = psi_start + N;
+  cte_start = v_start + N;
+  epsi_start = cte_start + N;
+  delta_start = epsi_start + N;
+  a_start = delta_start + N - 1;
+
+  cte_factor = cte_f;
+  epsi_factor = epsi_f;
+  steering_factor = steer_f;
+  acce_factor = a_f;
+  steering_diff_factor = steer_diff_f;
+  acce_diff_factor = a_diff_f;
+}
 
 class FG_eval {
  public:
@@ -61,21 +83,21 @@ class FG_eval {
 
     // The part of the cost based on the reference state.
     for (t = 0; t < N; t++) {
-      fg[0] += CTE_PENALTY_FACTOR * CppAD::pow(vars[cte_start + t], 2);
-      fg[0] += EPSI_PENALTY_FACTOR * CppAD::pow(vars[epsi_start + t], 2);
+      fg[0] += cte_factor * CppAD::pow(vars[cte_start + t], 2);
+      fg[0] += epsi_factor * CppAD::pow(vars[epsi_start + t], 2);
       fg[0] += CppAD::pow(vars[v_start + t] - ref_v, 2);
     }
 
     // Minimize the use of actuators.
     for (t = 0; t < N - 1; t++) {
-      fg[0] += STEERING_PENALTY_FACTOR * CppAD::pow(vars[delta_start + t], 2);
-      fg[0] += ACCELARATION_PENALTY_FACTOR * CppAD::pow(vars[a_start + t], 2);
+      fg[0] += steering_factor * CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += acce_factor * CppAD::pow(vars[a_start + t], 2);
     }
 
     // Minimize the value gap between sequential actuations.
     for (t = 0; t < N - 2; t++) {
-      fg[0] += STEERING_DIFF_PENALTY_FACTOR * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
-      fg[0] += ACCELARATION_DIFF_PENALTY_FACTOR * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
+      fg[0] += steering_diff_factor * CppAD::pow(vars[delta_start + t + 1] - vars[delta_start + t], 2);
+      fg[0] += acce_diff_factor * CppAD::pow(vars[a_start + t + 1] - vars[a_start + t], 2);
     }
 
     //
