@@ -22,7 +22,7 @@ static double dt = 0.1;
 const double Lf = 2.67;
 
 // Both the reference cross track and orientation errors are 0.
-static double ref_v = 50 * 0.44704;
+static double ref_v = 63 * 0.44704;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -36,12 +36,12 @@ static size_t epsi_start = cte_start + N;
 static size_t delta_start = epsi_start + N;
 static size_t a_start = delta_start + N - 1;
 
-static double cte_factor = 2000;
-static double epsi_factor = 2000;
-static double steering_factor = 5;
-static double acce_factor = 5;
-static double steering_diff_factor = 200;
-static double acce_diff_factor = 10;
+static double cte_factor = 1;
+static double epsi_factor = 30;
+static double steering_factor = 8;
+static double acce_factor = 1;
+static double steering_diff_factor = 1;
+static double acce_diff_factor = 1;
 
 void SetParams(size_t step, double interval, double v, double cte_f, double epsi_f,
                double steer_f, double a_f, double steer_diff_f, double a_diff_f) {

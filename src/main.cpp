@@ -178,7 +178,7 @@ int main() {
           a_f = std::stod(a_s);
           steer_diff_f = std::stod(steer_diff_s);
           a_diff_f = std::stod(a_diff_s);
-          if (0 == reset.compare("1")) {
+          if ("1" == reset) {
             SetParams(step, interval, ref_v, cte_f, epsi_f, steer_f, a_f, steer_diff_f, a_diff_f);
             std::string msg = "42[\"reset\",{}]";
             ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
