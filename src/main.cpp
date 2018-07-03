@@ -95,6 +95,26 @@ int main() {
           double steer_value = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
 
+          for (size_t i = 0; i < ptsx.size(); i++) {
+            /**
+             * Shift car reference angle to 90 degrees
+             */
+            double shift_x = ptsx[i] - px;
+            double shift_y = ptsy[i] - py;
+
+            ptsx[i] = (shift_x * cos(0 - psi) - shift_y * sin(0 - psi));
+            ptsy[i] = (shift_x * sin(0 - psi) + shift_y * cos(0 - psi));
+          }
+
+          double *ptrx = &ptsx[0];
+          double *ptry = &ptsy[0];
+          Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
+          Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
+
+          auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
+          double cte = polyeval(coeffs, 0);
+          double epsi = -atan(coeffs[1]);
+
           /**
            * According to Section 7 of Lesson 19:
            * One approach (to address actuator latency) would be
@@ -114,8 +134,13 @@ int main() {
           v *= 0.44704;
           double Lf = 2.67;
           double dt = 0.1;
+          px = 0;
+          py = 0;
+          psi = 0;
           px += v * cos(psi) * dt;
           py += v * sin(psi) * dt;
+          cte += v * sin(epsi) * dt;
+          epsi += v / Lf * steer_value * dt;
           /**
            * In the simulator, a positive psi value implies a right turn
            * and a negative value implies a left turn. The workaround to address
@@ -125,29 +150,8 @@ int main() {
           psi -= v / Lf * steer_value * dt;
           v += throttle_value * dt;
 
-          for (size_t i = 0; i < ptsx.size(); i++) {
-            /**
-             * Shift car reference angle to 90 degrees
-             */
-            double shift_x = ptsx[i] - px;
-            double shift_y = ptsy[i] - py;
-
-            ptsx[i] = (shift_x * cos(0 - psi) - shift_y * sin(0 - psi));
-            ptsy[i] = (shift_x * sin(0 - psi) + shift_y * cos(0 - psi));
-          }
-
-          double *ptrx = &ptsx[0];
-          double *ptry = &ptsy[0];
-          Eigen::Map<Eigen::VectorXd> ptsx_transform(ptrx, 6);
-          Eigen::Map<Eigen::VectorXd> ptsy_transform(ptry, 6);
-
-          auto coeffs = polyfit(ptsx_transform, ptsy_transform, 3);
-          double cte = polyeval(coeffs, 0);
-          //* epsi = psi - atan(f`(x)) = psi - atan(coeffs[1] + 2 * coeffs[2] * px + 3 * coeffs[3] * pow(px, 2))
-          double epsi = -atan(coeffs[1]);
-
           Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          state << px, py, psi, v, cte, epsi;
 
           /**
            * Read in parameters for online tuning.
@@ -192,7 +196,7 @@ int main() {
             */
             auto vars = mpc.Solve(state, coeffs);
 
-            steer_value = vars[0] / (deg2rad(25) * Lf);
+            steer_value = vars[0] / (deg2rad(25));
             throttle_value = vars[1];
 
             json msgJson;

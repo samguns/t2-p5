@@ -22,7 +22,7 @@ static double dt = 0.1;
 const double Lf = 2.67;
 
 // Both the reference cross track and orientation errors are 0.
-static double ref_v = 63 * 0.44704;
+static double ref_v = 64 * 0.44704;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
@@ -37,8 +37,8 @@ static size_t delta_start = epsi_start + N;
 static size_t a_start = delta_start + N - 1;
 
 static double cte_factor = 1;
-static double epsi_factor = 30;
-static double steering_factor = 8;
+static double epsi_factor = 600;
+static double steering_factor = 200;
 static double acce_factor = 1;
 static double steering_diff_factor = 1;
 static double acce_diff_factor = 1;
@@ -230,8 +230,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // degrees (values in radians).
   // NOTE: Feel free to change this to something else.
   for (i = delta_start; i < a_start; i++) {
-    vars_lowerbound[i] = -0.436332 * Lf;
-    vars_upperbound[i] = 0.436332 * Lf;
+    vars_lowerbound[i] = -0.436332;
+    vars_upperbound[i] = 0.436332;
   }
 
   // Acceleration/decceleration upper and lower limits.
