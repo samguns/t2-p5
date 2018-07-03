@@ -22,7 +22,7 @@ static double dt = 0.1;
 const double Lf = 2.67;
 
 // Both the reference cross track and orientation errors are 0.
-static double ref_v = 64 * 0.44704;
+static double ref_v = 63 * 0.44704;
 
 // The solver takes all the state variables and actuator
 // variables in a singular vector. Thus, we should to establish
